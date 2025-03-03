@@ -1,42 +1,46 @@
 pipeline {
     agent any
 
-    environment {
-        MAVEN_HOME = tool 'Maven' // Ensure Maven is installed in Jenkins
-    }
-
-    triggers {
-        cron('H/3 * * * 1') // Runs every 3 minutes on Mondays
-    }
-
     stages {
         stage('Checkout') {
             steps {
-                git 'https://github.com/ParthComp367/spring-petclinic_Quiz3.git'
+                // Make sure the correct branch is being checked out
+                git branch: 'main', url: 'https://github.com/pateldev11/spring-petclinic.git'
             }
         }
 
         stage('Build') {
             steps {
-                bat '${MAVEN_HOME}/bin/mvn clean package'
+                // Build steps here
+                bat 'mvn clean install'
             }
         }
 
-        stage('Run Tests with Jacoco') {
+        stage('Jacoco Coverage') {
             steps {
-                bat '${MAVEN_HOME}/bin/mvn test jacoco:report'
-            }
-            post {
-                success {
-                    jacoco execPattern: '**/target/jacoco.exec'
-                }
+                // Jacoco coverage steps here
+                bat 'mvn jacoco:prepare-agent test jacoco:report'
             }
         }
 
-        stage('Archive Artifacts') {
+        stage('Package Artifact') {
             steps {
-                archiveArtifacts artifacts: 'target/*.jar', fingerprint: true
+                // Package steps here
+                bat 'mvn package'
             }
         }
+    }
+    
+    post {
+        success {
+            echo 'Pipeline completed successfully!'
+        }
+        failure {
+            echo 'Pipeline failed.'
+        }
+    }
+
+    triggers {
+        cron('H/3 * * * 1') // Runs every 3 minutes on Monday
     }
 }
